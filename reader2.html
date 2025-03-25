@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简易电子阅读器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        #content {
+            white-space: pre-wrap;
+            line-height: 1.6;
+            font-size: 16px;
+            height: 500px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 20px 0;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            min-width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>简易电子阅读器</h1>
+        
+        <div class="controls">
+            <select id="fileSelector">
+        <option value="">-- 请选择文件 --</option>
+        <option value="书txt/与神对话.txt">与神对话.txt</option>
+        <option value="书txt/习惯的力量.txt">习惯的力量.txt</option>
+        <option value="书txt/人性的弱点.txt">人性的弱点.txt</option>
+        <option value="书txt/写作脑科学.txt">写作脑科学.txt</option>
+        <option value="书txt/刻意练习.txt">刻意练习.txt</option>
+        <option value="书txt/反脆弱.txt">反脆弱.txt</option>
+        <option value="书txt/可复制的领导力.txt">可复制的领导力.txt</option>
+        <option value="书txt/基层女性.txt">基层女性.txt</option>
+        <option value="书txt/幸福的勇气.txt">幸福的勇气.txt</option>
+        <option value="书txt/当下的力量.txt">当下的力量.txt</option>
+        <option value="书txt/思考快与慢.txt">思考快与慢.txt</option>
+        <option value="书txt/掌控习惯.txt">掌控习惯.txt</option>
+        <option value="书txt/早起的奇迹.txt">早起的奇迹.txt</option>
+        <option value="书txt/有限与无限的游戏.txt">有限与无限的游戏.txt</option>
+        <option value="书txt/极简学习法.txt">极简学习法.txt</option>
+        <option value="书txt/洞见.txt">洞见.txt</option>
+        <option value="书txt/相信.txt">相信.txt</option>
+        <option value="书txt/穷查理宝典.txt">穷查理宝典.txt</option>
+        <option value="书txt/笑猫日记 小猫出生在秘密山洞.txt">笑猫日记 小猫出生在秘密山洞.txt</option>
+        <option value="书txt/笑猫日记5 幸福的鸭子.txt">笑猫日记5 幸福的鸭子.txt</option>
+        <option value="书txt/纳瓦尔宝典.txt">纳瓦尔宝典.txt</option>
+        <option value="书txt/终身成长.txt">终身成长.txt</option>
+        <option value="书txt/结构化思维.txt">结构化思维.txt</option>
+        <option value="书txt/自学大全.txt">自学大全.txt</option>
+        <option value="书txt/蛤蟆先生去看心理医生.txt">蛤蟆先生去看心理医生.txt</option>
+        <option value="书txt/被讨厌的勇气.txt">被讨厌的勇气.txt</option>
+        <option value="书txt/认知红利.txt">认知红利.txt</option>
+        <option value="书txt/认知觉醒.txt">认知觉醒.txt</option>
+        <option value="书txt/货币战争.txt">货币战争.txt</option>
+        <option value="书txt/高效能人士的七个习惯.txt">高效能人士的七个习惯.txt</option>
+        <option value="书txt/黑天鹅.txt">黑天鹅.txt</option>
+    </select>
+            <div class="nav-buttons">
+                <button id="prevPage" disabled>上一页</button>
+                <button id="nextPage" disabled>下一页</button>
+            </div>
+        </div>
+        
+        <div id="content"></div>
+    </div>
+
+    <script>
+        // 全局变量
+        let currentPage = 0;
+        let linesPerPage = 30;
+        let lines = [];
+        let currentFile = '';
+
+        // 加载选中的文件
+        async function loadSelectedFile(filePath) {
+            if (!filePath) return;
+            
+            try {
+                const response = await fetch(filePath);
+                const content = await response.text();
+                lines = content.split('\n');
+                currentPage = 0;
+                currentFile = filePath;
+                renderPage();
+            } catch (error) {
+                console.error('加载文件失败:', error);
+            }
+        }
+
+        // 渲染当前页
+        function renderPage() {
+            const start = currentPage * linesPerPage;
+            const end = start + linesPerPage;
+            const pageContent = lines.slice(start, end).join('\n');
+            document.getElementById('content').textContent = pageContent;
+            
+            // 更新按钮状态
+            document.getElementById('prevPage').disabled = currentPage === 0;
+            document.getElementById('nextPage').disabled = end >= lines.length;
+        }
+
+        // 事件监听
+        document.getElementById('fileSelector').addEventListener('change', (e) => {
+            loadSelectedFile(e.target.value);
+        });
+
+        document.getElementById('prevPage').addEventListener('click', () => {
+            if (currentPage > 0) {
+                currentPage--;
+                renderPage();
+            }
+        });
+
+        document.getElementById('nextPage').addEventListener('click', () => {
+            if ((currentPage + 1) * linesPerPage < lines.length) {
+                currentPage++;
+                renderPage();
+            }
+        });
+    </script>
+</body>
+</html>
